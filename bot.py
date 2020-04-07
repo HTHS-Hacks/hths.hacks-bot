@@ -11,8 +11,9 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SHEET_ID = '1pZZWbaULz2CnLtgCemzdq2cZ2HEpEcE41v-LbgWnBxw'
+TOURNEY_SHEET = '1cEte4FOQw5eXhB5qUVl-RtlP35G_pNP_FqU-IqWh3MI'
 FIRST_INDEX = 0
 LAST_INDEX = 1
 EMAIL_INDEX = 2
@@ -22,6 +23,8 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 bot = commands.Bot(command_prefix='!')
+bot.remove_command("help")
+
 
 creds = None
 # The file token.pickle stores the user's access and refresh tokens, and is
@@ -74,7 +77,7 @@ async def on_reaction_add(reaction, user):
                 _,first_name,_,_,uid = reaction.message.content.split(';')
                 role_p = get(reaction.message.guild.roles, name='Participant')
                 role_u = get(reaction.message.guild.roles, name='Unverified')
-                user = get(bot.get_all_members(), id=int(uid))
+                user = get_member(uid)
                 await add_to_server(role_p, role_u, user, first_name)
                 await reaction.message.delete()
                 return
@@ -82,7 +85,7 @@ async def on_reaction_add(reaction, user):
         if reaction.message.author == bot.user:
             if reaction.emoji == '👍':
                 uid = int(reaction.message.content.split('(')[-1][:-1])
-                user = get(bot.get_all_members(), id=uid)
+                user = get_member(uid)
                 mentor = await reaction.users().flatten()
                 mentor = mentor[0]
                 guild = reaction.message.guild
@@ -114,6 +117,75 @@ async def get_open_tickets():
     messages = await open_tickets_channel.history(limit=1000).flatten()
 
     return [int(message.content.split(';')[1]) for message in messages]
+
+# @bot.command(name='jointourney')
+# async def jointourney(ctx):
+#     sheet = service.spreadsheets()
+#     body = {
+#       'values': [
+#             [ctx.message.author.name, ctx.message.author.id]
+#         ]
+#     }
+#     result = sheet.values().append(spreadsheetId=TOURNEY_SHEET, range='A:Z', body=body).execute()
+#     await ctx.send("{ctx.message.author.mention}, you have successfully joined the tournament! To back out, message an organizer")
+
+# def get_member(uid):
+#     user = get(bot.get_all_members(), id=int(uid))
+#     return user
+
+# async def make_game(ctx, player1, player2):
+#     guild = ctx.message.guild
+#     category = get(guild.categories, name='TourneyGames')
+#     overwrites = {
+#         user: discord.PermissionOverwrite(read_messages=True, send_messages=True, embed_links=True, attach_files=True),
+#         mentor: discord.PermissionOverwrite(read_messages=True, send_messages=True, embed_links=True, attach_files=True),
+#         guild.default_role: discord.PermissionOverwrite(read_messages=False)
+#     }
+#     channel = await guild.create_text_channel(f"ticket-{user.name}", category=category, overwrites=overwrites)
+
+# @bot.command(name='starttourney')
+# @command.has_role('Organizer')
+# async def starttourney(ctx):
+#     sheet = service.spreadsheets()
+#     result = sheet.values().get(spreadsheetId=TOURNEY_SHEET, range='A:Z').execute()
+#     result = result.get('values', [])
+
+#     bracket = []
+
+#     for i in range(len(result)//2):
+#         player_1 = result[i*2]
+#         player_2 = result[i*2+1]
+#         bracket.append([player_1, player_2])
+#     if len(result)%2 == 1:
+#         bracket.append([result[-1]])
+
+#     sheet_out = []
+#     for game in bracket:
+#         if len(game) == 1:
+#             sheet_out.append([game[0], game[0]])
+#             user = get_member(game[0][1])
+#             channel = user.create_dm()
+#             await channel.send("You have been given a bye in the tournament. We will let you know when your next game is.")
+#         else:
+#             sheet_out.append(game)
+#         sheet_out.append([])
+
+@bot.command(name='help')
+async def help(ctx):
+    embed = discord.Embed(title='Help', description='How to use the hths.hacks() bot', color=0x3976D5)
+    embed.add_field(name='!submit', value='Submit your project to Devpost', inline=True)
+    embed.add_field(name='!mc', value='Show the Minecraft server address. **Can only be run in #bots**', inline=True)
+    embed.add_field(name='!ticket', value='Create a support ticket. **Can only be run in #ask-a-mentor**', inline=True)
+    embed.add_field(name='!closeticket', value='Close your ticket. **Can only be run in your private ticket.**', inline=True)
+    await ctx.send(embed=embed)
+
+@bot.command(name='mc')
+async def mc(ctx):
+    await ctx.send("MC Server: kusti8.mooo.com")
+
+@bot.command(name='submit')
+async def submit(ctx):
+    await ctx.send("To submit your project, visit the Devpost: https://hthshacks-20.devpost.com/")
 
 @bot.command(name='closeticket')
 async def closeticket(ctx):
