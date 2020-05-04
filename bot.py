@@ -2,6 +2,7 @@ import os
 
 from discord.ext import commands
 from discord.utils import get
+from discord.ext import tasks
 import discord
 from dotenv import load_dotenv
 
@@ -11,13 +12,19 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+from datetime import datetime
+import datetime as dt
+import pytz
+import traceback
+
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SHEET_ID = '1pZZWbaULz2CnLtgCemzdq2cZ2HEpEcE41v-LbgWnBxw'
-TOURNEY_SHEET = '1cEte4FOQw5eXhB5qUVl-RtlP35G_pNP_FqU-IqWh3MI'
+SHEET_ID = '1z2Vh9IiGfSDeHcTtxEU1-6UMjTVTNiejWsqsAdajgLQ'
 FIRST_INDEX = 0
 LAST_INDEX = 1
 EMAIL_INDEX = 2
 
+
+SCHEDULE_SHEET = '18s4lz7cFUPw3uJn4EZzJN7W052ihOTxrxhut4sl5CjQ'
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -27,8 +34,6 @@ bot.remove_command("help")
 
 
 creds = None
-# The file token.pickle stores the user's access and refresh tokens, and is
-# created automatically when the authorization flow completes for the first
 # time.
 if os.path.exists('token.pickle'):
     with open('token.pickle', 'rb') as token:
@@ -64,21 +69,21 @@ async def on_message(message):
 
     await message.delete()
 
-async def add_to_server(role_p, role_u, user, first_name):
+async def add_to_server(role_p, role_u, user, name):
     await user.add_roles(role_p)
     await user.remove_roles(role_u)
-    await user.edit(nick=first_name)
+    await user.edit(nick=name.title())
 
 @bot.event
 async def on_reaction_add(reaction, user):
     if reaction.message.channel.name == 'mod-verification':
         if reaction.message.author == bot.user:
             if reaction.emoji == '👍':
-                _,first_name,_,_,uid = reaction.message.content.split(';')
+                _,name,_,uid = reaction.message.content.split(';')
                 role_p = get(reaction.message.guild.roles, name='Participant')
                 role_u = get(reaction.message.guild.roles, name='Unverified')
                 user = get_member(uid)
-                await add_to_server(role_p, role_u, user, first_name)
+                await add_to_server(role_p, role_u, user, name)
                 await reaction.message.delete()
                 return
     elif reaction.message.channel.name == 'ticket-queue':
@@ -118,70 +123,27 @@ async def get_open_tickets():
 
     return [int(message.content.split(';')[1]) for message in messages]
 
-# @bot.command(name='jointourney')
-# async def jointourney(ctx):
-#     sheet = service.spreadsheets()
-#     body = {
-#       'values': [
-#             [ctx.message.author.name, ctx.message.author.id]
-#         ]
-#     }
-#     result = sheet.values().append(spreadsheetId=TOURNEY_SHEET, range='A:Z', body=body).execute()
-#     await ctx.send("{ctx.message.author.mention}, you have successfully joined the tournament! To back out, message an organizer")
-
-# def get_member(uid):
-#     user = get(bot.get_all_members(), id=int(uid))
-#     return user
-
-# async def make_game(ctx, player1, player2):
-#     guild = ctx.message.guild
-#     category = get(guild.categories, name='TourneyGames')
-#     overwrites = {
-#         user: discord.PermissionOverwrite(read_messages=True, send_messages=True, embed_links=True, attach_files=True),
-#         mentor: discord.PermissionOverwrite(read_messages=True, send_messages=True, embed_links=True, attach_files=True),
-#         guild.default_role: discord.PermissionOverwrite(read_messages=False)
-#     }
-#     channel = await guild.create_text_channel(f"ticket-{user.name}", category=category, overwrites=overwrites)
-
-# @bot.command(name='starttourney')
-# @command.has_role('Organizer')
-# async def starttourney(ctx):
-#     sheet = service.spreadsheets()
-#     result = sheet.values().get(spreadsheetId=TOURNEY_SHEET, range='A:Z').execute()
-#     result = result.get('values', [])
-
-#     bracket = []
-
-#     for i in range(len(result)//2):
-#         player_1 = result[i*2]
-#         player_2 = result[i*2+1]
-#         bracket.append([player_1, player_2])
-#     if len(result)%2 == 1:
-#         bracket.append([result[-1]])
-
-#     sheet_out = []
-#     for game in bracket:
-#         if len(game) == 1:
-#             sheet_out.append([game[0], game[0]])
-#             user = get_member(game[0][1])
-#             channel = user.create_dm()
-#             await channel.send("You have been given a bye in the tournament. We will let you know when your next game is.")
-#         else:
-#             sheet_out.append(game)
-#         sheet_out.append([])
+def get_member(uid):
+    user = get(bot.get_all_members(), id=int(uid))
+    return user
 
 @bot.command(name='help')
 async def help(ctx):
     embed = discord.Embed(title='Help', description='How to use the hths.hacks() bot', color=0x3976D5)
     embed.add_field(name='!submit', value='Submit your project to Devpost', inline=True)
     embed.add_field(name='!mc', value='Show the Minecraft server address. **Can only be run in #bots**', inline=True)
-    embed.add_field(name='!ticket', value='Create a support ticket. **Can only be run in #ask-a-mentor**', inline=True)
+    embed.add_field(name='!chess', value='Link to register for the chess tournament. **Can only be run in #bots**', inline=True)
+    embed.add_field(name='!ticket <Your message>', value='Create a support ticket. **Can only be run in #ask-a-mentor**', inline=True)
     embed.add_field(name='!closeticket', value='Close your ticket. **Can only be run in your private ticket.**', inline=True)
     await ctx.send(embed=embed)
 
 @bot.command(name='mc')
 async def mc(ctx):
-    await ctx.send("MC Server: kusti8.mooo.com")
+    await ctx.send("MC Server: mc.hthshacks.com")
+
+@bot.command(name='chess')
+async def chess(ctx):
+    await ctx.send("Chess tournament: https://challonge.com/tournaments/signup/zlWqUhyiKQ")
 
 @bot.command(name='submit')
 async def submit(ctx):
@@ -199,7 +161,7 @@ async def closeticket(ctx):
         return
 
 @bot.command(name='ticket')
-async def ticket(ctx):
+async def ticket(ctx, *message):
     if ctx.message.channel.name != 'ask-a-mentor':
         return
 
@@ -214,24 +176,60 @@ async def ticket(ctx):
     await channel.send("We have received your request and are pairing you with a mentor. This may take some time. Please be patient.")
 
     ticket_queue_channel = get(ctx.guild.channels, name='ticket-queue')
-    await ticket_queue_channel.send(f"New ticket from {ctx.message.author.mention}. React with :thumbsup: to accept ({ctx.message.author.id})")
+    await ticket_queue_channel.send(f"New ticket from {ctx.message.author.mention} about {' '.join(message)}. React with :thumbsup: to accept ({ctx.message.author.id})")
 
     await add_open_ticket(ctx.message.author)
 
 @bot.command(name='verify')
 @commands.has_role('Unverified')
-async def verify(ctx, email: str, first_name: str, last_name: str):
+async def verify(ctx, email: str, *name):
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=SHEET_ID, range='A:Z').execute()
     values = result.get('values', [])
     for row in values:
-        if row[FIRST_INDEX].lower().strip() == first_name.lower().strip() and row[LAST_INDEX].lower().strip() == last_name.lower().strip() and row[EMAIL_INDEX].lower().strip() == email.lower().strip():
+        if (row[FIRST_INDEX] + row[LAST_INDEX]).lower().strip().replace(' ', '') == ''.join(name).lower().strip().replace(' ', '') and row[EMAIL_INDEX].lower().strip() == email.lower().strip():
             role_p = get(ctx.guild.roles, name='Participant')
             role_u = get(ctx.guild.roles, name='Unverified')
-            await add_to_server(role_p, role_u, ctx.message.author, first_name.capitalize())
+            await add_to_server(role_p, role_u, ctx.message.author, ' '.join(name))
             return
     channel = await ctx.message.author.create_dm()
     await channel.send("Welcome! Your information could not be automatically verified. Please wait while an organizer manually approves your verification.")
     mod_verify_channel = get(ctx.guild.channels, name='mod-verification')
-    await mod_verify_channel.send(f"{ctx.message.author.mention};{first_name};{last_name};{email};{ctx.message.author.id}")
+    await mod_verify_channel.send(f"{ctx.message.author.mention};{' '.join(name)};{email};{ctx.message.author.id}")
+
+@tasks.loop(seconds=10)
+async def check_schedule():
+    try:
+        times = [
+            (dt.timedelta(minutes=30), "in 30 minutes"),
+            (dt.timedelta(minutes=15), "in 15 minutes"),
+            (dt.timedelta(minutes=10), "in 10 minutes"),
+            (dt.timedelta(minutes=0), "now")
+        ]
+
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=SCHEDULE_SHEET, range='A:Z').execute()
+        values = result.get('values', [])
+
+        curr_time = datetime.now()
+
+        for i, row in enumerate(values[1:]):
+            row[0] = row[0].replace(chr(160), " ")
+            date = datetime.strptime(row[0], '%m/%d/%Y %H:%M')
+            message = row[1]
+            after_message = row[2]
+
+            for index, stats in enumerate(zip(row[3:], times)):
+                status, time = stats
+                if status.lower() == 'yes' and curr_time+time[0] > date:
+                    channel = get(bot.guilds[0].channels, name="announcements")
+                    await channel.send(f"@everyone {message} {time[1]}. {after_message}")
+                    values[i+1][index+3] = "No"
+                    break
+        sheet.values().update(spreadsheetId=SCHEDULE_SHEET, range='A:Z', valueInputOption="USER_ENTERED", body={'values': values}).execute()
+    except Exception as e:
+        traceback.print_exc()
+
+
+check_schedule.start()
 bot.run(TOKEN)
