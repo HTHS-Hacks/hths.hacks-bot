@@ -26,6 +26,8 @@ EMAIL_INDEX = 2
 
 SCHEDULE_SHEET = '18s4lz7cFUPw3uJn4EZzJN7W052ihOTxrxhut4sl5CjQ'
 
+LAST_MINUTE_SHEET = '1DbEHUA1wJDBV_M0s1bQmY8ftIRQ6wELgJZiyGJeFXh0'
+
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -69,9 +71,8 @@ async def on_message(message):
 
     await message.delete()
 
-async def add_to_server(role_p, role_u, user, name):
+async def add_to_server(role_p, user, name):
     await user.add_roles(role_p)
-    await user.remove_roles(role_u)
     await user.edit(nick=name.title())
 
 @bot.event
@@ -81,9 +82,8 @@ async def on_reaction_add(reaction, user):
             if reaction.emoji == '👍':
                 _,name,_,uid = reaction.message.content.split(';')
                 role_p = get(reaction.message.guild.roles, name='Participant')
-                role_u = get(reaction.message.guild.roles, name='Unverified')
                 user = get_member(uid)
-                await add_to_server(role_p, role_u, user, name)
+                await add_to_server(role_p, user, name)
                 await reaction.message.delete()
                 return
     elif reaction.message.channel.name == 'ticket-queue':
@@ -180,20 +180,40 @@ async def ticket(ctx, *message):
 
     await add_open_ticket(ctx.message.author)
 
+def check_consent_form(email):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=LAST_MINUTE_SHEET, range='A:Z').execute()
+    values = result.get('values', [])
+    for row in values:
+        if row[1].lower().strip() == email.lower().strip():
+            return True
+
+    return False
+
 @bot.command(name='verify')
-@commands.has_role('Unverified')
-async def verify(ctx, email: str, *name):
+async def verify(ctx, *args):
+    dm = await ctx.message.author.create_dm()
+
+    if len(args) < 2:
+        await dm.send("Welcome! You did not send the correct arguments. Please check in the #verification channel for more detail.")
+        return
+
+    email = args[0]
+    name = args[1:]
+
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=SHEET_ID, range='A:Z').execute()
     values = result.get('values', [])
+
     for row in values:
         if (row[FIRST_INDEX] + row[LAST_INDEX]).lower().strip().replace(' ', '') == ''.join(name).lower().strip().replace(' ', '') and row[EMAIL_INDEX].lower().strip() == email.lower().strip():
+            if not check_consent_form(email):
+                await dm.send("Welcome! You did not fill out the swag & consent form. Please fill it out and reverify. https://forms.gle/CbZ5D3vAXet5nJjR6")
+                return
             role_p = get(ctx.guild.roles, name='Participant')
-            role_u = get(ctx.guild.roles, name='Unverified')
-            await add_to_server(role_p, role_u, ctx.message.author, ' '.join(name))
+            await add_to_server(role_p, ctx.message.author, ' '.join(name))
             return
-    channel = await ctx.message.author.create_dm()
-    await channel.send("Welcome! Your information could not be automatically verified. Please wait while an organizer manually approves your verification.")
+    await dm.send("Welcome! Your information could not be automatically verified. Please wait while an organizer manually approves your verification.")
     mod_verify_channel = get(ctx.guild.channels, name='mod-verification')
     await mod_verify_channel.send(f"{ctx.message.author.mention};{' '.join(name)};{email};{ctx.message.author.id}")
 
