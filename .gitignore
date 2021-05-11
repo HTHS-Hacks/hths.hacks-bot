@@ -1,0 +1,6 @@
+node_modules/
+
+# Secrets
+config.json
+credentials.json
+token.json

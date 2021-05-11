@@ -1,0 +1,21 @@
+{
+  "name": "hths.hacks-bot",
+  "version": "1.0.0",
+  "description": "For hths.hacks 2021",
+  "homepage": "https://github.com/HTHS-Hacks/hths.hacks-bot/tree/master",
+  "bugs": {
+    "url": "https://github.com/HTHS-Hacks/hths.hacks-bot/issues"
+  },
+  "main": "index.js",
+  "author": "Noah Rediker",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HTHS-Hacks/hths.hacks-bot.git"
+  },
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "googleapis": "^71.0.0",
+    "random-org": "^2.1.1"
+  }
+}
