@@ -33,11 +33,5 @@ module.exports = {
                 });
             });
         });
-
-        /*
-        // Delete message from #open-tickets and delete channel
-        message.guild.channels.resolve('827271159040180268').messages.cache.find(m => m.content.split(';')[1] == message.author.id).delete({ reason: 'Close Ticket' });
-        message.channel.delete('Close Ticket');
-        */
     },
 };
