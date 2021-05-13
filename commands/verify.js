@@ -42,8 +42,6 @@ module.exports = {
             else {
                 let match = false;
                 for (const row of rows) {
-                    console.log(row[EMAIL_INDEX].toLowerCase().trim() + ' == ' + email.toLowerCase().trim());
-                    console.log((row[FIRSTNAME_INDEX] + row[LASTNAME_INDEX]).toLowerCase().trim().replaceAll(' ', '') + ' == ' + name.toLowerCase().trim().replaceAll(' ', ''));
                     if (row[EMAIL_INDEX].toLowerCase().trim() == email.toLowerCase().trim() && (row[FIRSTNAME_INDEX] + row[LASTNAME_INDEX]).toLowerCase().trim().replaceAll(' ', '') == name.toLowerCase().trim().replaceAll(' ', '')) {
                         message.member.roles.add('827266226949718107').catch(() => {});
                         message.member.roles.remove('827264873666838529').catch(() => {});
