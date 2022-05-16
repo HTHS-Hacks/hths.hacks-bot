@@ -18,17 +18,17 @@ module.exports = {
         }
         let rString;
 
-        // Return if not in Tickets category
-        if (message.channel.parent.id != '833393707536351353') return;
+        // Return if not in Active Tickets category
+        if (message.channel.parent.id != '975541341805215794') return;
 
         // Return if not from asker
         if (message.author.id != message.channel.name.split('-')[1]) return;
 
         // Archive channel
-        message.guild.channels.resolve('827271159040180268').messages.cache.find(m => m.content.split(';')[1] == message.author.id).delete({ reason: 'Close Ticket' });
+        message.guild.channels.resolve('961807066194923520').messages.cache.find(m => m.content.split(';')[1] == message.author.id).delete({ reason: 'Close Ticket' }); // #open-tickets
         genRandString().then(() => {
-            message.channel.setParent('841311998147166218', { lockPermissions: false }).then(c0 => {
-                c0.updateOverwrite('796103730772312064', { SEND_MESSAGES: false, ADD_REACTIONS: false }).then(c1 => {
+            message.channel.setParent('975542480508432384', { lockPermissions: false }).then(c0 => { // Archived Tickets category
+                c0.updateOverwrite('953316537232658463', { SEND_MESSAGES: false, ADD_REACTIONS: false }).then(c1 => { // everyone role
                     c1.setName('archived-' + c1.name + '-' + rString);
                 });
             });

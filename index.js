@@ -8,15 +8,15 @@ const { google } = require('googleapis');
 const RandomOrg = require('random-org');
 
 // Setup
-const clearChannels = ['827266669159252018', '827266978530983938']; // #verification, #ask-a-mentor
-const noClearRoles = ['796103963215659018', '827273709776797697', '796110242513420338', '827266660347936818', '827271413680832604', '827271805579821078']; // Admin, MLH, Moderator, Bot, Mentor, Judge
+const clearChannels = ['956707173117886586', '961809942740865124']; // #verification, #code-help
+const noClearRoles = ['956766438805352459', '961806736371646465', '956766045144768512', '975533443045801994', '961807423130193951']; // Admin, MLH, Moderator, Bot, Judge
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 const TOKEN_PATH = 'token.json';
 let oAuth2Client;
 let randomClient;
 
 // Create client
-const client = new Discord.Client();
+const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, Discord.Intents.FLAGS.GUILD_MESSAGES, Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Discord.Intents.FLAGS.DIRECT_MESSAGES]});
 
 // Discover commands
 client.commands = new Discord.Collection();
@@ -64,7 +64,7 @@ client.once('ready', () => {
 });
 
 // On message
-client.on('message', message => {
+client.on('messageCreate', message => {
     // Return if from bot
     if (message.author.bot) return;
 
@@ -77,11 +77,11 @@ client.on('message', message => {
         if (!command) { return delFromClear(message); }
 
         // Check conditions
-        if (command.guildOnly && message.channel.type !== 'text') { return message.reply('I can\'t execute that command inside DMs!'); }
+        if (command.guildOnly && message.channel.type !== 'GUILD_TEXT') { return message.reply('I can\'t execute that command inside DMs!'); }
         if (command.roleOnly) {
             let flag = false;
             for (const roleId of command.roleOnly) { if (message.member.role.cache.has(roleId)) { flag = true; } }
-            if (!flag && !delFromClear(message)) { message.reply('you don\'t have permission to execute that command.'); }
+            if (!flag && !delFromClear(message)) { message.reply('You don\'t have permission to execute that command.'); }
             if (!flag) return;
         }
         if (command.args && !args.length) {
@@ -98,7 +98,7 @@ client.on('message', message => {
             const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
             if (now < expirationTime) {
                 const timeLeft = (expirationTime - now) / 1000;
-                if (!delFromClear(message)) { message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before rusing the \`${command.name}\` command.`); }
+                if (!delFromClear(message)) { message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before rusing the \`${command.name}\` command.`); }
                 return;
             }
         } else {
@@ -110,7 +110,7 @@ client.on('message', message => {
         try { command.execute(message, args, oAuth2Client, randomClient); }
         catch (error) {
             console.error(error);
-            if (!delFromClear(message)) message.reply('there was an error trying to execute that command.');
+            if (!delFromClear(message)) message.reply('There was an error trying to execute that command.');
         }
     }
 
@@ -131,13 +131,13 @@ function delFromClear(message) {
 
 // On reaction
 client.on('messageReactionAdd', (reaction, reactor) => {
-    if (reaction.message.channel.id == '827271021068288001') { // #ticket-queue
+    if (reaction.message.channel.id == '961807031789047828') { // #ticket-queue
         if (reaction.message.author.id == client.user.id) {
             if (reaction.emoji.name == '👍') {
                 const askerID = reaction.message.content.split('\n').pop();
                 const asker = reaction.message.guild.member(askerID);
                 const options = {
-                    parent: '833393707536351353',
+                    parent: '975541341805215794', // Active Tickets category
                     permissionOverwrites: [
                         {
                             id: askerID,
@@ -148,7 +148,7 @@ client.on('messageReactionAdd', (reaction, reactor) => {
                             allow: Discord.Permissions.FLAGS.VIEW_CHANNEL
                         },
                         {
-                            id: '796103730772312064',
+                            id: '953316537232658463', // everyone
                             deny: Discord.Permissions.FLAGS.VIEW_CHANNEL
 
                         }
@@ -162,13 +162,13 @@ client.on('messageReactionAdd', (reaction, reactor) => {
             }
         }
     }
-    else if (reaction.message.channel.id == '838547798286139423') { // #manual-verification
+    else if (reaction.message.channel.id == '961805471419867136') { // #manual-verification
         if (reaction.message.author.id == client.user.id) {
             if (reaction.emoji.name == '👍') {
                 const unverifiedID = reaction.message.content.split('\n').pop();
                 const unverified = reaction.message.guild.member(unverifiedID);
-                unverified.roles.add('827266226949718107').catch(() => {});
-                unverified.roles.remove('827264873666838529').catch(() => {});
+                unverified.roles.add('956767299933704222').catch(() => {}); // Participant role
+                unverified.roles.remove('956765911568752670').catch(() => {}); // Unverified role
                 reaction.message.delete();
             }
         }

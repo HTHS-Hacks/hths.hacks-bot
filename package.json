@@ -1,7 +1,7 @@
 {
   "name": "hths.hacks-bot",
-  "version": "1.0.2",
-  "description": "For hths.hacks 2021",
+  "version": "2.0.0",
+  "description": "For hths.hacks 2022",
   "homepage": "https://github.com/HTHS-Hacks/hths.hacks-bot/tree/master",
   "bugs": {
     "url": "https://github.com/HTHS-Hacks/hths.hacks-bot/issues"
@@ -14,8 +14,8 @@
     "url": "https://github.com/HTHS-Hacks/hths.hacks-bot.git"
   },
   "dependencies": {
-    "discord.js": "^12.5.3",
-    "googleapis": "^71.0.0",
-    "random-org": "^2.1.1"
+    "discord.js": "^13.7.0",
+    "googleapis": "^100.0.0",
+    "random-org": "^2.2.0"
   }
 }

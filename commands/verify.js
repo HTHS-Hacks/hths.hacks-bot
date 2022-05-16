@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const { google } = require('googleapis');
+const config = require('../config.json');
 module.exports = {
     name: 'verify',
     aliases: [],
@@ -21,15 +22,17 @@ module.exports = {
         const EMAIL_INDEX = 1;
         const FIRSTNAME_INDEX = 2;
         const LASTNAME_INDEX = 3;
-        const GRADE_INDEX = 8;
+        const GRADE_INDEX = 6;
+        const VERIFIED_INDEX = 22;
         const GRADEMAP = new Map();
-        GRADEMAP.set('Fr', 24);
-        GRADEMAP.set('So', 23);
-        GRADEMAP.set('Ju', 22);
-        GRADEMAP.set('Se', 21);
+        GRADEMAP.set('Fr', 25);
+        GRADEMAP.set('So', 24);
+        GRADEMAP.set('Ju', 23);
+        GRADEMAP.set('Se', 22);
 
         const sheets = google.sheets({ version: 'v4', auth: oAuth2Client});
-        sheets.spreadsheets.values.get({ spreadsheetId: '1ugUTO4Z7FslDrvf4Lo_fhA-J0l_Vg1NjRtpWKfZ8iQE', range: 'A:Z' }, (err, res) => {
+        sheets.spreadsheets.
+        sheets.spreadsheets.values.get({ spreadsheetId: config.spreadsheetId, range: 'A:V' }, (err, res) => {
             if (err) {
                 message.author.send('There was an error verifying you. Please try again or contact an Admin.').catch(() => {});
                 return console.error(err);
@@ -42,9 +45,9 @@ module.exports = {
             else {
                 let match = false;
                 for (const row of rows) {
-                    if (row[EMAIL_INDEX].toLowerCase().trim() == email.toLowerCase().trim() && (row[FIRSTNAME_INDEX] + row[LASTNAME_INDEX]).toLowerCase().trim().replaceAll(' ', '') == name.toLowerCase().trim().replaceAll(' ', '')) {
-                        message.member.roles.add('827266226949718107').then(m0 => {
-                            m0.roles.remove('827264873666838529').then(m1 => {
+                    if (row[VERIFIED_INDEX] == 'x' && row[EMAIL_INDEX].toLowerCase().trim() == email.toLowerCase().trim() && (row[FIRSTNAME_INDEX] + row[LASTNAME_INDEX]).toLowerCase().trim().replaceAll(' ', '') == name.toLowerCase().trim().replaceAll(' ', '')) {
+                        message.member.roles.add('956767299933704222').then(m0 => { // Participant role
+                            m0.roles.remove('956765911568752670').then(m1 => { // Unverified role
                                 m1.setNickname(`${row[FIRSTNAME_INDEX].trim().replaceAll(' ', '')}${row[LASTNAME_INDEX].trim().charAt(0).toUpperCase()}${GRADEMAP.get(row[GRADE_INDEX].trim().substring(0, 2))}`).catch(() => {});
                             });
                         });
@@ -54,7 +57,7 @@ module.exports = {
                 }
                 if (!match) {
                     message.author.send('Your information could not be automatically verfied.\nPlease wait while an organizer manually approves your verification.').catch(() => {});
-                    message.guild.channels.resolve('838547798286139423').send(`${message.member.toString()}\n${email}\n${name}\n${message.author.id}`);
+                    message.guild.channels.resolve('961805471419867136').send(`${message.member.toString()}\n${email}\n${name}\n${message.author.id}`); // #manual-verification
                 }
             }
         });
