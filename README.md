@@ -1,6 +1,6 @@
 # hths.hacks-bot
 
-This is a reference of the bot used in hths.hacks() 202.
+This is a reference of the bot used in hths.hacks() 2022.
 
 This is not intended to be used by others, this is simply for transparency and reference.
 
