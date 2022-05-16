@@ -135,7 +135,7 @@ client.on('messageReactionAdd', (reaction, reactor) => {
         if (reaction.message.author.id == client.user.id) {
             if (reaction.emoji.name == '👍') {
                 const askerID = reaction.message.content.split('\n').pop();
-                const asker = reaction.message.guild.member(askerID);
+                const asker = reaction.message.guild.members.cache.get(askerID);
                 const options = {
                     parent: '975541341805215794', // Active Tickets category
                     permissionOverwrites: [
@@ -166,7 +166,7 @@ client.on('messageReactionAdd', (reaction, reactor) => {
         if (reaction.message.author.id == client.user.id) {
             if (reaction.emoji.name == '👍') {
                 const unverifiedID = reaction.message.content.split('\n').pop();
-                const unverified = reaction.message.guild.member(unverifiedID);
+                const unverified = reaction.message.guild.members.cache.get(unverifiedID);
                 unverified.roles.add('956767299933704222').catch(() => {}); // Participant role
                 unverified.roles.remove('956765911568752670').catch(() => {}); // Unverified role
                 reaction.message.delete();

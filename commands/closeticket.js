@@ -28,7 +28,7 @@ module.exports = {
         message.guild.channels.resolve('961807066194923520').messages.cache.find(m => m.content.split(';')[1] == message.author.id).delete({ reason: 'Close Ticket' }); // #open-tickets
         genRandString().then(() => {
             message.channel.setParent('975542480508432384', { lockPermissions: false }).then(c0 => { // Archived Tickets category
-                c0.updateOverwrite('953316537232658463', { SEND_MESSAGES: false, ADD_REACTIONS: false }).then(c1 => { // everyone role
+                c0.permissionOverwrites.edit('953316537232658463', { SEND_MESSAGES: false, ADD_REACTIONS: false }).then(c1 => { // everyone role
                     c1.setName('archived-' + c1.name + '-' + rString);
                 });
             });

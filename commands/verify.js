@@ -31,7 +31,6 @@ module.exports = {
         GRADEMAP.set('Se', 22);
 
         const sheets = google.sheets({ version: 'v4', auth: oAuth2Client});
-        sheets.spreadsheets.
         sheets.spreadsheets.values.get({ spreadsheetId: config.spreadsheetId, range: 'A:W' }, (err, res) => {
             if (err) {
                 message.author.send('There was an error verifying you. Please try again or contact an Admin.').catch(() => {});
